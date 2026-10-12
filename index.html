@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>영상팀 연차·야근대휴 입력</title>
+  <style>
+    :root { color-scheme: light; --ink:#182230; --muted:#657184; --line:#e1e7ef; --blue:#2457d6; --blue-dark:#1745b2; --bg:#f4f7fb; --card:#fff; --mint:#e9f7f2; --mint-ink:#146b4c; --danger:#a12b2b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+    .wrap { width:min(100% - 32px, 680px); margin:32px auto; }
+    header { margin:0 0 20px; }
+    .eyebrow { color:var(--blue); font-size:13px; font-weight:700; letter-spacing:.04em; }
+    h1 { margin:8px 0 8px; font-size:clamp(25px,5vw,34px); line-height:1.2; }
+    .sub { margin:0; color:var(--muted); line-height:1.55; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px; box-shadow:0 12px 35px rgba(23,43,77,.06); }
+    .calendar-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 11px; margin-bottom:22px; border-radius:999px; background:var(--mint); color:var(--mint-ink); font-size:13px; font-weight:700; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#20a675; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .top-row { display:flex; gap:16px; }
+    .top-row > .field { flex:1; min-width:0; }
+    .field { margin-bottom:18px; }
+    label, .label { display:block; margin:0 0 8px; font-size:14px; font-weight:700; }
+    select, input[type=date], input[type=number], input[type=text] { width:100%; min-height:48px; border:1px solid #cbd5e1; border-radius:10px; padding:0 13px; background:#fff; color:var(--ink); font:inherit; font-size:16px; }
+    select:focus, input:focus { outline:3px solid rgba(36,87,214,.15); border-color:var(--blue); }
+    .switch { display:grid; grid-template-columns:repeat(3,1fr); background:#eef2f7; border-radius:12px; padding:4px; margin:4px 0 22px; }
+    .switch button { border:0; background:transparent; min-height:44px; border-radius:9px; color:#586579; font:inherit; font-weight:700; cursor:pointer; }
+    .switch button.active { background:#fff; color:var(--blue); box-shadow:0 1px 5px rgba(20,35,60,.12); }
+    .choice-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .choice-row.two { grid-template-columns:1fr 1fr; }
+    .choice { position:relative; }
+    .choice input { position:absolute; opacity:0; inset:0; }
+    .choice span { display:flex; align-items:center; justify-content:center; min-height:46px; padding:8px; border:1px solid var(--line); border-radius:10px; text-align:center; font-size:14px; font-weight:700; cursor:pointer; }
+    .choice input:checked + span { border-color:var(--blue); background:#eef3ff; color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue); }
+    .choice input:focus-visible + span { outline:3px solid rgba(36,87,214,.2); }
+    .hint { color:var(--muted); font-size:13px; line-height:1.5; margin:8px 0 0; }
+    .notice { padding:12px 14px; border-radius:10px; background:#f5f7fa; color:#536174; font-size:13px; line-height:1.5; margin:0 0 18px; }
+    .submit { width:100%; min-height:52px; border:0; border-radius:11px; background:var(--blue); color:#fff; font:inherit; font-size:16px; font-weight:700; cursor:pointer; }
+    .submit:hover { background:var(--blue-dark); }
+    .submit:disabled { opacity:.65; cursor:wait; }
+    .undo { width:100%; min-height:44px; margin-top:10px; border:1px solid #f1c4c4; border-radius:11px; background:#fff; color:var(--danger); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+    .undo:hover { background:#fff5f5; }
+    .undo.confirm { background:var(--danger); color:#fff; border-color:var(--danger); }
+    .undo:disabled { opacity:.6; cursor:wait; }
+    .status { min-height:22px; margin:14px 0 0; font-size:14px; line-height:1.5; }
+    .status.ok { color:var(--mint-ink); }
+    .status.error { color:var(--danger); }
+    .footer { margin:16px 4px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .quick-links { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+    .quick-links a { display:flex; align-items:center; justify-content:center; gap:6px; min-height:48px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--blue); font-size:15px; font-weight:700; text-decoration:none; box-shadow:0 6px 18px rgba(23,43,77,.05); }
+    .quick-links a:hover { border-color:var(--blue); background:#eef3ff; }
+    .summary { margin-top:18px; }
+    .summary-head { display:flex; align-items:center; justify-content:space-between; margin:0 0 12px; }
+    .summary h2 { margin:0; font-size:18px; }
+    .refresh { border:1px solid var(--line); background:#fff; color:var(--blue); border-radius:9px; padding:7px 12px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+    .table-wrap { overflow-x:auto; }
+    .summary table { width:100%; border-collapse:collapse; font-size:14px; }
+    .summary th, .summary td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; }
+    .summary th { background:#f5f7fa; color:#536174; font-weight:700; }
+    .summary td:first-child { font-weight:700; }
+    .summary td:last-child { background:#fff8e1; font-weight:700; }
+    .summary tr.me td { background:#eef3ff; }
+    .summary tr.me td:last-child { background:#e3ebff; color:var(--blue); }
+    [hidden] { display:none !important; }
+    @media (max-width:560px) {
+      .wrap { width:min(100% - 20px, 680px); margin:18px auto; }
+      .card { padding:18px 16px; border-radius:15px; }
+      .grid { grid-template-columns:1fr; gap:0; }
+      .top-row { flex-direction:column; gap:0; }
+      .choice-row { grid-template-columns:1fr; }
+      .choice-row.two { grid-template-columns:1fr 1fr; }
+      .choice span { min-height:48px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">VIDEO TEAM · TIME OFF</div>
+      <h1>연차·야근대휴 입력</h1>
+      <p class="sub">연차·대휴 사용과 실제 야근 기록을 한 곳에서 입력해요.</p>
+    </header>
+
+    <section class="card" aria-label="근태 일정 입력">
+      <div class="calendar-pill"><span class="dot" aria-hidden="true"></span><span id="calendarName">[영상]근태공유</span></div>
+
+      <form id="entryForm">
+        <div class="top-row">
+          <div class="field">
+            <label for="member">팀원 이름</label>
+            <select id="member" name="member" required>
+              <option value="">이름 선택</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="date">사용 날짜</label>
+            <input id="date" name="date" type="date" required>
+          </div>
+          <div class="field" id="endDateField">
+            <label for="endDate">종료 날짜</label>
+            <input id="endDate" name="endDate" type="date">
+            <p class="hint">연속 연차일 때만 · 비우면 하루</p>
+          </div>
+        </div>
+
+        <div class="switch" role="tablist" aria-label="기록 종류">
+          <button type="button" class="active" id="personalTab" role="tab" aria-selected="true">연차</button>
+          <button type="button" id="compTab" role="tab" aria-selected="false">대휴 사용</button>
+          <button type="button" id="overtimeTab" role="tab" aria-selected="false">야근 기록</button>
+        </div>
+        <input type="hidden" id="category" value="personal">
+
+        <section id="personalPanel" aria-label="개인 연차 유형">
+          <div class="field">
+            <span class="label">연차 유형</span>
+            <div class="choice-row">
+              <label class="choice"><input type="radio" name="subtype" value="annual" checked><span>연차</span></label>
+              <label class="choice"><input type="radio" name="subtype" value="amHalf"><span>오전반차</span></label>
+              <label class="choice"><input type="radio" name="subtype" value="pmHalf"><span>오후반차</span></label>
+            </div>
+          </div>
+          <p class="hint">개인 연차는 공용 달력에만 기록해요.</p>
+        </section>
+
+        <section id="compPanel" aria-label="야근대휴 정보" hidden>
+          <div class="grid">
+            <div class="field">
+              <span class="label">사용 시간대</span>
+              <div class="choice-row two">
+                <label class="choice"><input type="radio" name="period" value="am" checked><span>오전</span></label>
+                <label class="choice"><input type="radio" name="period" value="pm"><span>오후</span></label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="hours">대휴 시간</label>
+              <input id="hours" name="hours" type="number" min="0.25" max="24" step="0.25" placeholder="예: 3">
+              <p class="hint" id="remainHint">예: 3 또는 1.5</p>
+            </div>
+          </div>
+          <p class="hint">야근대휴는 공용 달력과 해당 팀원의 야근기록지 사용란에 함께 기록해요.</p>
+        </section>
+
+        <section id="overtimePanel" aria-label="실제 야근 기록" hidden>
+          <div class="grid">
+            <div class="field">
+              <label for="reason">야근 사유</label>
+              <input id="reason" name="reason" type="text" maxlength="250" placeholder="예: 제품 촬영, 영상 수정">
+            </div>
+            <div class="field">
+              <label for="overtimeHours">잔업 시간</label>
+              <input id="overtimeHours" name="overtimeHours" type="number" min="0" max="24" step="0.25" placeholder="예: 2">
+            </div>
+          </div>
+          <div class="field">
+            <label for="extraMinutes">추가 분 (10분 단위)</label>
+            <select id="extraMinutes" name="extraMinutes">
+              <option value="0">없음</option>
+              <option value="10">10분</option>
+              <option value="20">20분</option>
+              <option value="30">30분</option>
+              <option value="40">40분</option>
+              <option value="50">50분</option>
+            </select>
+            <p class="hint">야근기록지 K열 총시간은 시간과 추가 분을 합산해 계산해요.</p>
+          </div>
+        </section>
+
+        <p class="notice" id="notice">일정은 종일 형식으로 등록돼요. 달력에서 같은 날짜와 제목이 이미 있는지 확인한 뒤 저장합니다.</p>
+        <button class="submit" id="submitButton" type="submit">연차 신청</button>
+        <button class="undo" id="undoButton" type="button">가장 최근 기록 삭제하기</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <div class="quick-links">
+      <a id="calendarLink" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener">📅 캘린더 확인하기</a>
+      <a id="sheetLink" href="#" target="_blank" rel="noopener">📝 야근기록 확인하기</a>
+    </div>
+    <section class="card summary" aria-label="야근일지 총합">
+      <div class="summary-head">
+        <h2>야근일지 총합</h2>
+        <button type="button" class="refresh" id="refreshSummary">새로고침</button>
+      </div>
+      <div class="table-wrap"><table id="summaryTable"><tbody><tr><td>불러오는 중...</td></tr></tbody></table></div>
+    </section>
+    <p class="footer">팀원 이름은 목록에서 선택해요. 이 앱을 팀원에게만 공유해 주세요.</p>
+  </main>
+
+  <script>
+    // 구글 앱스크립트 서버 주소. 화면은 여기(GitHub)에 있고, 저장·조회만 이 주소로 보냄.
+    // 쿠키를 보내지 않아서 브라우저에 로그인된 구글 계정과 상관없이 동작함.
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwgOj69YiHRfEZFWI42LyA_TRbWn3Z7I8bRWNgKlc0ZhN04wJGP-xUzAzyw--MTSA7sgQ/exec';
+
+    // 기존 화면 코드가 쓰던 google.script.run 형태를 그대로 흉내내는 연결 코드
+    window.google = { script: { run: makeRunner(null, null) } };
+    function makeRunner(onOk, onFail) {
+      return new Proxy({}, {
+        get(_, name) {
+          if (name === 'withSuccessHandler') return fn => makeRunner(fn, onFail);
+          if (name === 'withFailureHandler') return fn => makeRunner(onOk, fn);
+          return (...args) => {
+            fetch(API_URL, {
+              method: 'POST',
+              credentials: 'omit',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: name, args: args })
+            })
+              .then(r => r.json())
+              .then(res => {
+                if (res && res.ok) { if (onOk) onOk(res.data); }
+                else if (onFail) onFail(new Error((res && res.error) || '서버 오류가 발생했어요.'));
+              })
+              .catch(() => { if (onFail) onFail(new Error('서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.')); });
+          };
+        }
+      });
+    }
+  </script>
+  <script>
+    const form = document.getElementById('entryForm');
+    const statusEl = document.getElementById('status');
+    const submitButton = document.getElementById('submitButton');
+    const categoryInput = document.getElementById('category');
+    const personalPanel = document.getElementById('personalPanel');
+    const compPanel = document.getElementById('compPanel');
+    const overtimePanel = document.getElementById('overtimePanel');
+
+    function setStatus(message, kind) {
+      statusEl.textContent = message || '';
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function updateEndDate() {
+      const annual = categoryInput.value === 'personal' && form.querySelector('input[name="subtype"]:checked').value === 'annual';
+      document.getElementById('endDateField').hidden = !annual;
+      document.getElementById('endDate').min = document.getElementById('date').value;
+    }
+    document.querySelectorAll('input[name="subtype"]').forEach(r => r.addEventListener('change', updateEndDate));
+    document.getElementById('date').addEventListener('change', updateEndDate);
+
+    function submitLabel(category) {
+      return { personal: '연차 신청', comp: '대휴 신청', overtime: '야근 기록지에 저장' }[category] || '저장';
+    }
+
+    function setCategory(category) {
+      categoryInput.value = category;
+      const personal = category === 'personal';
+      const comp = category === 'comp';
+      const overtime = category === 'overtime';
+      personalPanel.hidden = !personal;
+      compPanel.hidden = !comp;
+      overtimePanel.hidden = !overtime;
+      document.getElementById('personalTab').classList.toggle('active', personal);
+      document.getElementById('compTab').classList.toggle('active', comp);
+      document.getElementById('overtimeTab').classList.toggle('active', overtime);
+      document.getElementById('personalTab').setAttribute('aria-selected', String(personal));
+      document.getElementById('compTab').setAttribute('aria-selected', String(comp));
+      document.getElementById('overtimeTab').setAttribute('aria-selected', String(overtime));
+      document.getElementById('hours').required = comp;
+      document.getElementById('reason').required = overtime;
+      document.getElementById('overtimeHours').required = overtime;
+      document.getElementById('extraMinutes').required = overtime;
+      document.getElementById('calendarName').textContent = overtime ? '야근 기록지 · 직원별 탭' : '[영상]근태공유';
+      document.getElementById('notice').textContent = overtime
+        ? '실제 야근 기록은 선택한 직원 탭의 야근일자·사유·잔업시간·추가 분 칸에 저장돼요.'
+        : '연차와 대휴 사용은 종일 일정으로 달력에 기록돼요. 대휴 사용은 개인 시트에도 함께 남아요.';
+      submitButton.textContent = submitLabel(category);
+      setStatus('', '');
+      updateEndDate();
+    }
+
+    document.getElementById('personalTab').addEventListener('click', () => setCategory('personal'));
+    document.getElementById('compTab').addEventListener('click', () => setCategory('comp'));
+    document.getElementById('overtimeTab').addEventListener('click', () => setCategory('overtime'));
+    setCategory('personal');
+
+    function init() {
+      const now = new Date();
+      const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      document.getElementById('date').value = localDate;
+      google.script.run
+        .withSuccessHandler(config => {
+          const select = document.getElementById('member');
+          config.members.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+          });
+          document.getElementById('calendarName').textContent = config.calendarName;
+          appConfig = config;
+          updateLinks();
+        })
+        .withFailureHandler(error => setStatus(error.message || '팀원 목록을 불러오지 못했어요.', 'error'))
+        .getAppConfig();
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const payload = {
+        member: document.getElementById('member').value,
+        date: document.getElementById('date').value,
+        category: categoryInput.value
+      };
+      if (payload.category === 'personal') {
+        payload.subtype = form.querySelector('input[name="subtype"]:checked').value;
+        if (payload.subtype === 'annual') payload.endDate = document.getElementById('endDate').value;
+      } else if (payload.category === 'comp') {
+        payload.period = form.querySelector('input[name="period"]:checked').value;
+        payload.hours = document.getElementById('hours').value;
+      } else {
+        payload.reason = document.getElementById('reason').value;
+        payload.hours = document.getElementById('overtimeHours').value;
+        payload.extraMinutes = document.getElementById('extraMinutes').value;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = '저장 중...';
+      setStatus('', '');
+      google.script.run
+        .withSuccessHandler(result => {
+          let message;
+          if (result.category === 'overtime') {
+            message = result.member + ' 야근기록지 ' + result.sheetRow + '행에 저장했어요. 총 ' + result.totalHours + '시간입니다.';
+          } else {
+            message = result.title + (result.endDate ? ' (' + result.date + ' ~ ' + result.endDate + ')' : '') + ' 일정이 등록됐어요.';
+            if (result.sheetRow) message += ' ' + result.sheetName + ' 야근기록지 ' + result.sheetRow + '행에도 기록했어요.';
+          }
+          setStatus(message, 'ok');
+          // 저장 성공 후 입력값 비우기 (이름·날짜·탭은 유지)
+          document.getElementById('hours').value = '';
+          document.getElementById('endDate').value = '';
+          document.getElementById('reason').value = '';
+          document.getElementById('overtimeHours').value = '';
+          document.getElementById('extraMinutes').value = '0';
+          loadSummary();
+          submitButton.disabled = false;
+          submitButton.textContent = submitLabel(categoryInput.value);
+        })
+        .withFailureHandler(error => {
+          setStatus(error.message || '저장에 실패했어요.', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = submitLabel(categoryInput.value);
+        })
+        .submitEntry(payload);
+    });
+
+    function updateRemainHint() {
+      const el = document.getElementById('remainHint');
+      const me = document.getElementById('member').value;
+      if (!lastSummary || !me) { el.textContent = '예: 3 또는 1.5'; return; }
+      const idx = lastSummary.headers.findIndex(t => t.includes('남은'));
+      const row = lastSummary.rows.find(r => r[0] === me);
+      el.textContent = (idx >= 0 && row) ? me + '님 남은 대휴: ' + row[idx] + '시간' : '예: 3 또는 1.5';
+    }
+
+    function renderSummary(data) {
+      const table = document.getElementById('summaryTable');
+      table.innerHTML = '';
+      const thead = document.createElement('thead');
+      const hr = document.createElement('tr');
+      data.headers.forEach(t => { const th = document.createElement('th'); th.textContent = t; hr.appendChild(th); });
+      thead.appendChild(hr);
+      const tbody = document.createElement('tbody');
+      const me = document.getElementById('member').value;
+      data.rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (me && r[0] === me) tr.className = 'me';
+        r.forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      updateRemainHint();
+    }
+
+    let appConfig = null;
+    function updateLinks() {
+      if (!appConfig) return;
+      const me = document.getElementById('member').value;
+      const gid = me && appConfig.sheetGids ? appConfig.sheetGids[me] : undefined;
+      document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/' + appConfig.spreadsheetId + '/edit' + (gid !== undefined ? '#gid=' + gid : '');
+      document.getElementById('calendarLink').href = 'https://calendar.google.com/calendar/r?cid=' + btoa(appConfig.calendarId).replace(/=+$/, '');
+    }
+    document.getElementById('member').addEventListener('change', updateLinks);
+
+    let lastSummary = null;
+    function loadSummary() {
+      google.script.run
+        .withSuccessHandler(data => { lastSummary = data; renderSummary(data); })
+        .withFailureHandler(error => {
+          document.getElementById('summaryTable').innerHTML = '<tbody><tr><td></td></tr></tbody>';
+          document.querySelector('#summaryTable td').textContent = error.message || '총합을 불러오지 못했어요.';
+        })
+        .getOvertimeSummary();
+    }
+    document.getElementById('refreshSummary').addEventListener('click', loadSummary);
+    document.getElementById('member').addEventListener('change', () => { if (lastSummary) renderSummary(lastSummary); });
+
+    const undoButton = document.getElementById('undoButton');
+    let undoArmed = false;
+    let undoTimer = null;
+    function resetUndo() {
+      undoArmed = false;
+      clearTimeout(undoTimer);
+      undoButton.classList.remove('confirm');
+      undoButton.disabled = false;
+      undoButton.textContent = '가장 최근 기록 삭제하기';
+    }
+    undoButton.addEventListener('click', () => {
+      const me = document.getElementById('member').value;
+      if (!me) { setStatus('팀원 이름을 먼저 선택해 주세요.', 'error'); return; }
+      if (!undoArmed) {
+        undoButton.disabled = true;
+        google.script.run
+          .withSuccessHandler(rec => {
+            undoButton.disabled = false;
+            if (!rec) { setStatus(me + '님의 최근 기록이 없어요.', 'error'); return; }
+            undoArmed = true;
+            undoButton.classList.add('confirm');
+            undoButton.textContent = '삭제할까요? [' + rec.label + '] 한 번 더 누르면 삭제';
+            undoTimer = setTimeout(resetUndo, 6000);
+          })
+          .withFailureHandler(err => { resetUndo(); setStatus(err.message, 'error'); })
+          .getLastEntry(me);
+        return;
+      }
+      clearTimeout(undoTimer);
+      undoButton.disabled = true;
+      undoButton.textContent = '삭제 중...';
+      google.script.run
+        .withSuccessHandler(res => { resetUndo(); setStatus(res.label + ' 삭제했어요. (' + res.done.join(', ') + ')', 'ok'); loadSummary(); })
+        .withFailureHandler(err => { resetUndo(); setStatus(err.message || '삭제에 실패했어요.', 'error'); })
+        .deleteLastEntry(me);
+    });
+    document.getElementById('member').addEventListener('change', resetUndo);
+
+    init();
+    updateEndDate();
+    loadSummary();
+  </script>
+</body>
+</html>
